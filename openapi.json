@@ -25,6 +25,22 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseHealth"
+                },
+                "examples": {
+                  "ok": {
+                    "summary": "正常稼働中",
+                    "value": {
+                      "status": "ok",
+                      "version": "1.1.0"
+                    }
+                  },
+                  "degraded": {
+                    "summary": "縮退運転中 (一部 GPU が利用不可)",
+                    "value": {
+                      "status": "degraded",
+                      "version": "1.1.0"
+                    }
+                  }
                 }
               }
             }
@@ -45,6 +61,114 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/RequestV1Solve"
+              },
+              "examples": {
+                "knapsack_sparse_constraint": {
+                  "summary": "Sparse 目的関数 + ハード制約 (0/1 ナップサック)",
+                  "description": "4 アイテムの 0/1 ナップサック問題。価値最大化のため目的関数は負の係数。容量上限 8 を constraints で表現する。",
+                  "value": {
+                    "time_limit_ms": 5000,
+                    "num_gpus": 1,
+                    "duplicate_solutions": false,
+                    "sparse_objective": [
+                      [-3, 0],
+                      [-4, 1],
+                      [-5, 2],
+                      [-6, 3]
+                    ],
+                    "constraints": [
+                      {
+                        "expression": [
+                          [2, 0],
+                          [3, 1],
+                          [4, 2],
+                          [5, 3]
+                        ],
+                        "upper": 8
+                      }
+                    ]
+                  }
+                },
+                "qubo_dense_constraint": {
+                  "summary": "Dense 目的関数 + ハード制約 (3 変数 QUBO)",
+                  "description": "上三角・ラギッド形式の密行列で表した QUBO。x_0+x_1+x_2 を [1, 2] に収める線形制約付き。",
+                  "value": {
+                    "time_limit_ms": 10000,
+                    "num_gpus": 2,
+                    "duplicate_solutions": true,
+                    "dense_objective": {
+                      "matrix": [
+                        [1, -2, 0],
+                        [3, -1],
+                        [2]
+                      ],
+                      "constant": 0
+                    },
+                    "constraints": [
+                      {
+                        "expression": [
+                          [1, 0],
+                          [1, 1],
+                          [1, 2]
+                        ],
+                        "lower": 1,
+                        "upper": 2
+                      }
+                    ]
+                  }
+                },
+                "pubo_sparse_penalty": {
+                  "summary": "Sparse 目的関数 + ペナルティ (3 次項を含む PUBO)",
+                  "description": "x_0*x_1*x_2 の 3 次項を含む sparse PUBO。x_0*x_1 にソフトなペナルティを課し、calibration を有効化。num_gpus=0 は『利用可能な全 GPU を使用』の特例値。",
+                  "value": {
+                    "time_limit_ms": 15000,
+                    "num_gpus": 0,
+                    "duplicate_solutions": false,
+                    "sparse_objective": [
+                      [-2, 0],
+                      [-1, 1],
+                      [-3, 2],
+                      [5, 0, 1, 2]
+                    ],
+                    "penalties": [
+                      {
+                        "expression": [
+                          [1, 0, 1]
+                        ],
+                        "weight": 10,
+                        "threshold": 0
+                      }
+                    ],
+                    "penalty_weight_calibration": true
+                  }
+                },
+                "partition_dense_penalty": {
+                  "summary": "Dense 目的関数 + ペナルティ (3 要素の数分割)",
+                  "description": "a = [1, 2, 3] の数分割問題を密行列の QUBO + 対称性破れペナルティで表現。penalty_weight_calibration は無効化。",
+                  "value": {
+                    "time_limit_ms": 8000,
+                    "num_gpus": 1,
+                    "duplicate_solutions": false,
+                    "dense_objective": {
+                      "matrix": [
+                        [-20, 16, 24],
+                        [-32, 48],
+                        [-36]
+                      ],
+                      "constant": 36
+                    },
+                    "penalties": [
+                      {
+                        "expression": [
+                          [1, 0]
+                        ],
+                        "weight": 0.5,
+                        "threshold": 0
+                      }
+                    ],
+                    "penalty_weight_calibration": false
+                  }
+                }
               }
             }
           },
@@ -57,6 +181,90 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseV1SyncSolve"
+                },
+                "examples": {
+                  "optimal_single": {
+                    "summary": "単一解 (Optimal) — knapsack_sparse_constraint に対応",
+                    "value": {
+                      "solutions": [
+                        {
+                          "time_stamp_ms": 1234.5,
+                          "objective": -10,
+                          "values": [0, 1, 0, 1],
+                          "status": "Optimal"
+                        }
+                      ],
+                      "execution_time_ms": 1234.5,
+                      "queue_time_ms": 12.3,
+                      "submitted_at": "2026-05-16T10:00:00.000Z",
+                      "started_at": "2026-05-16T10:00:00.012Z",
+                      "num_gpus": 1,
+                      "num_samplings": 1000,
+                      "num_flips": 50000,
+                      "warnings": [],
+                      "version": "1.1.0"
+                    }
+                  },
+                  "feasible_multi": {
+                    "summary": "複数解 (Optimal + Feasible) — duplicate_solutions=true / warnings あり",
+                    "value": {
+                      "solutions": [
+                        {
+                          "time_stamp_ms": 1200.0,
+                          "objective": 0.0,
+                          "values": [1, 1, 0],
+                          "status": "Optimal"
+                        },
+                        {
+                          "time_stamp_ms": 1500.0,
+                          "objective": 0.5,
+                          "values": [0, 0, 1],
+                          "status": "Feasible"
+                        },
+                        {
+                          "time_stamp_ms": 1800.0,
+                          "objective": 2.5,
+                          "values": [1, 0, 1],
+                          "status": "Feasible"
+                        }
+                      ],
+                      "execution_time_ms": 1800.0,
+                      "queue_time_ms": 45.2,
+                      "submitted_at": "2026-05-16T10:01:00.000Z",
+                      "started_at": "2026-05-16T10:01:00.045Z",
+                      "num_gpus": 2,
+                      "num_samplings": 2000,
+                      "num_flips": 100000,
+                      "warnings": [
+                        "penalty_weight_calibration が無効化されているため、一部の制約が満たされない可能性があります"
+                      ],
+                      "version": "1.1.0"
+                    }
+                  },
+                  "infeasible": {
+                    "summary": "実行不能 (Infeasible) — pre-release バージョン情報付き",
+                    "value": {
+                      "solutions": [
+                        {
+                          "time_stamp_ms": 9999.0,
+                          "objective": 1234.5,
+                          "values": [1, 1, 1, 1],
+                          "status": "Infeasible"
+                        }
+                      ],
+                      "execution_time_ms": 9999.0,
+                      "queue_time_ms": 100.0,
+                      "submitted_at": "2026-05-16T10:02:00.000Z",
+                      "started_at": "2026-05-16T10:02:00.100Z",
+                      "num_gpus": 1,
+                      "num_samplings": 500,
+                      "num_flips": 25000,
+                      "warnings": [
+                        "制約を満たす解が time_limit_ms 内に見つかりませんでした"
+                      ],
+                      "version": "1.1.0-rc.1"
+                    }
+                  }
                 }
               }
             }
@@ -67,6 +275,20 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseOnError"
+                },
+                "examples": {
+                  "invalid_matrix_shape": {
+                    "summary": "dense_objective.matrix が上三角形式でない",
+                    "value": {
+                      "error": "Invalid request: dense_objective.matrix が上三角行列の形式 ([[a_11..a_1n], [a_22..a_2n], ..., [a_nn]]) ではありません"
+                    }
+                  },
+                  "constraint_missing_bound": {
+                    "summary": "ConstraintV1 に lower/upper のどちらも指定されていない",
+                    "value": {
+                      "error": "Invalid request: constraints[0] には lower / upper の少なくとも一方を指定する必要があります"
+                    }
+                  }
                 }
               }
             }
@@ -77,6 +299,14 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseOnError"
+                },
+                "examples": {
+                  "rate_limited": {
+                    "summary": "同時実行数の上限に到達",
+                    "value": {
+                      "error": "Too many requests: 同時実行数の上限に達しました。しばらく待ってから再試行してください"
+                    }
+                  }
                 }
               }
             }
@@ -87,6 +317,14 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseOnError"
+                },
+                "examples": {
+                  "internal_error": {
+                    "summary": "ソルバー内部エラー",
+                    "value": {
+                      "error": "Internal server error: ソルバーが予期せず終了しました。リクエスト ID をサポートまでお知らせください"
+                    }
+                  }
                 }
               }
             }
@@ -200,18 +438,16 @@
       },
       "PolynomialV1": {
         "items": {
-          "prefixItems": [
+          "items": [
             {
               "type": "number",
               "description": "係数"
             }
           ],
-          "items": {
+          "additionalItems": {
             "type": "integer",
             "maximum": 4294967295,
             "minimum": 0,
-            "maxLength": 4,
-            "minLength": 1,
             "description": "変数インデックスのリスト"
           },
           "type": "array",

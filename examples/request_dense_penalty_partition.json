@@ -1,0 +1,23 @@
+{
+  "time_limit_ms": 8000,
+  "num_gpus": 1,
+  "duplicate_solutions": false,
+  "dense_objective": {
+    "matrix": [
+      [-20, 16, 24],
+      [-32, 48],
+      [-36]
+    ],
+    "constant": 36
+  },
+  "penalties": [
+    {
+      "expression": [
+        [1, 0]
+      ],
+      "weight": 0.5,
+      "threshold": 0
+    }
+  ],
+  "penalty_weight_calibration": false
+}

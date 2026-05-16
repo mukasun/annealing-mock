@@ -20,19 +20,21 @@ Alternatives considered and rejected for this use case: writing a FastAPI/Hono m
 
 ### Run
 
-No source code is required. Two recommended forms:
+No source code is required. Package manager is **pnpm** (pinned via `packageManager: pnpm@11.1.1` in `package.json`; bootstrap with `corepack enable pnpm` if it isn't installed). Two recommended forms:
 
 ```bash
-# Throwaway run (no install)
+# Throwaway run (no install) — uses npx because pnpm dlx requires a project
 npx -y @stoplight/prism-cli mock openapi.json
 
-# Pinned (preferred — create package.json with @stoplight/prism-cli as devDependency)
-npm install --save-dev @stoplight/prism-cli
-npx prism mock openapi.json                   # static mode, port 4010
-npx prism mock -d openapi.json                # dynamic mode (randomized values)
-npx prism mock -p 8080 -h 0.0.0.0 openapi.json
-npx prism mock --errors openapi.json          # let Prism choose 4xx/5xx when the request would warrant one
+# Pinned (preferred — @stoplight/prism-cli is already a devDependency)
+pnpm install
+pnpm prism mock openapi.json                  # static mode, port 4010
+pnpm prism mock -d openapi.json               # dynamic mode (randomized values)
+pnpm prism mock -p 8080 -h 0.0.0.0 openapi.json
+pnpm prism mock --errors openapi.json         # let Prism choose 4xx/5xx when the request would warrant one
 ```
+
+The repo also exposes script aliases: `pnpm mock`, `pnpm mock:dynamic`, `pnpm mock:errors`, `pnpm mock:lan`.
 
 Default bind: `127.0.0.1:4010`. Health check: `curl http://127.0.0.1:4010/v1/health`.
 

@@ -1,0 +1,16 @@
+{
+  "name": "annealing-mock",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Local mock server for the Annealing Engine API v1 (OpenAPI 3.1) backed by Prism.",
+  "packageManager": "pnpm@11.1.1",
+  "scripts": {
+    "mock": "prism mock openapi.json",
+    "mock:dynamic": "prism mock -d openapi.json",
+    "mock:errors": "prism mock --errors openapi.json",
+    "mock:lan": "prism mock -h 0.0.0.0 -p 4010 openapi.json"
+  },
+  "devDependencies": {
+    "@stoplight/prism-cli": "^5.10.0"
+  }
+}
