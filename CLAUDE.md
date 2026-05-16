@@ -1,0 +1,80 @@
+<!-- cspell:ignore QUBO PUBO Stoplight stoplightio raghav -->
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Purpose
+
+A **local mock server** that serves the contract defined in `openapi.json` (Annealing Engine API v1) without implementing real solver logic. Used for client development and integration testing against a stable interface.
+
+## Stack: Prism (Stoplight)
+
+[`@stoplight/prism-cli`](https://github.com/stoplightio/prism) consumes `openapi.json` directly — no handler code to write. Picked because:
+
+- Native OpenAPI 3.1 support (matches `openapi.json`'s `"openapi": "3.1.0"`).
+- Validates incoming requests against the schema and returns RFC 7807 Problem Details on violation. The `oneOf` discriminator over the 4 request shapes is enforced automatically.
+- Two response modes: **static** (returns `example` / `examples` from the spec when present, otherwise the first matching schema example) and **dynamic** (`-d`, generates randomized data via JSON Schema Faker). Per-request override available via `Prefer: dynamic=true` header.
+- Surfaces example-vs-schema mismatches at startup, which doubles as a contract lint.
+
+Alternatives considered and rejected for this use case: writing a FastAPI/Hono mock by hand (too much code for a mock), Mockoon (GUI-first, weaker 3.1 + `oneOf` story), `openapi-mocker` (less maintained).
+
+### Run
+
+No source code is required. Two recommended forms:
+
+```bash
+# Throwaway run (no install)
+npx -y @stoplight/prism-cli mock openapi.json
+
+# Pinned (preferred — create package.json with @stoplight/prism-cli as devDependency)
+npm install --save-dev @stoplight/prism-cli
+npx prism mock openapi.json                   # static mode, port 4010
+npx prism mock -d openapi.json                # dynamic mode (randomized values)
+npx prism mock -p 8080 -h 0.0.0.0 openapi.json
+npx prism mock --errors openapi.json          # let Prism choose 4xx/5xx when the request would warrant one
+```
+
+Default bind: `127.0.0.1:4010`. Health check: `curl http://127.0.0.1:4010/v1/health`.
+
+### Per-request control
+
+- `Prefer: example=<name>` — pick a named example.
+- `Prefer: dynamic=true` — force dynamic generation for that request.
+- `Prefer: code=400` — request a specific response code (useful for exercising 400 / 429 / 500 `ResponseOnError` paths defined in the spec).
+
+## API contract (source of truth: `openapi.json`)
+
+The spec describes the **Annealing Engine API v1** — a quantum/classical annealing solver for QUBO / PUBO problems. Two endpoints:
+
+- `GET /v1/health` → `ResponseHealth { status, version }`
+- `POST /v1/sync/solve` → `ResponseV1SyncSolve` (errors: 400 / 429 / 500 with `ResponseOnError`)
+
+`POST /v1/sync/solve` accepts a `oneOf` over **four request shapes** formed by two orthogonal axes. A correct mock must dispatch on this combination, not on a single discriminator:
+
+|                | Sparse objective (`sparse_objective: PolynomialV1`) | Dense objective (`dense_objective: DenseObjectiveV1`) |
+|----------------|------------------------------------------------------|--------------------------------------------------------|
+| **Constraint** | `RequestV1SolveSparseConstraint` (+ `constraints`)   | `RequestV1SolveDenseConstraint` (+ `constraints`)      |
+| **Penalty**    | `RequestV1SolveSparsePenalty` (+ `penalties`, `penalty_weight_calibration`) | `RequestV1SolveDensePenalty` (+ `penalties`, `penalty_weight_calibration`) |
+
+Key schema details that are easy to miss:
+
+- `PolynomialV1` is a list of `[coefficient, var_idx_1, var_idx_2, ...]` tuples. Each term has 1 coefficient + 1–4 variable indices (polynomial degree ≤ 4). Variable indices are `uint32`.
+- `DenseObjectiveV1.matrix` is **upper-triangular, ragged**: `[[a_11..a_1n], [a_22..a_2n], ..., [a_nn]]` — not a full n×n matrix. Validation should reject square / lower-triangular inputs.
+- `ConstraintV1` requires `expression` plus **at least one of `lower` / `upper`** (defaults are ±inf, but the schema's `anyOf` mandates one be explicitly present).
+- `PenaltyV1.weight` is `exclusiveMinimum: 0` and `threshold` is `minimum: 0`.
+- `Solution.values` is an array of strict `0|1` integers (binary, not boolean). `Solution.status` is one of `Infeasible | Feasible | Optimal`.
+- `ResponseV1SyncSolve.version` must match the regex `^\d+\.\d+\.\d+(-.*)?(\+.*)?$` (SemVer with optional pre-release/build metadata).
+- `ResponseV1SyncSolve.solutions` has `minItems: 1` — must never be empty on success.
+- `num_gpus: 0` in requests is special-cased ("use all available GPUs"). The response still reports the actual count (≥ 0).
+
+### Prism-specific quirks to anticipate
+
+- `oneOf` matching: Prism picks the first sub-schema whose required fields are satisfied. If a request body contains keys from multiple shapes (e.g. both `sparse_objective` and `dense_objective`), the result depends on schema order. Don't rely on this; clients should send exactly one shape.
+- The OpenAPI 3.1 examples generated by Prism in dynamic mode satisfy the schema (`minItems`, `min`, regex `version`, etc.), but may not be semantically meaningful (e.g. `solutions[].values` length unrelated to the polynomial's variable indices). That is acceptable for a mock; tests that need consistency should switch to static examples or move to a hand-written handler.
+- Prism returns `422 Unprocessable Entity` for request validation failures by default, even though the spec only declares `400 / 429 / 500`. Use the `--errors` flag if you want Prism to choose error responses from the spec instead.
+
+## Working in this repo
+
+- `openapi.json` is the source of truth. When changing API behavior, update the spec and bump `info.version` (currently `1.1.0`) — do not let documentation and runtime diverge.
+- Field `description`s in `openapi.json` are intentionally Japanese. Preserve Japanese descriptions when editing or regenerating the spec.
+- Keep the repo minimal: a thin `package.json` pinning `@stoplight/prism-cli` is the maximum scaffolding needed for the mock use case. Do not add a backend framework, ORM, or test harness unless the requirements grow beyond "serve the spec".

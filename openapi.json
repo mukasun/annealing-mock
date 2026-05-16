@@ -1,0 +1,619 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Annealing Engine API",
+    "version": "1.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://example.com"
+    }
+  ],
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "tags": [
+          "Annealing Engine v1 API"
+        ],
+        "summary": "Health Check",
+        "description": "サービスが正常に動いているか確認します。",
+        "operationId": "health_check_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseHealth"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sync/solve": {
+      "post": {
+        "tags": [
+          "Annealing Engine v1 API"
+        ],
+        "summary": "V1 Solve (Synchronous)",
+        "description": "ソルバーを同期的に実行します。",
+        "operationId": "v1_solve__synchronous__v1_sync_solve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestV1Solve"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseV1SyncSolve"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseOnError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseOnError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseOnError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ConstraintV1": {
+        "anyOf": [
+          {
+            "required": [
+              "lower"
+            ]
+          },
+          {
+            "required": [
+              "upper"
+            ]
+          }
+        ],
+        "properties": {
+          "lower": {
+            "type": "number",
+            "title": "Lower",
+            "description": "下限",
+            "default": "-inf"
+          },
+          "upper": {
+            "type": "number",
+            "title": "Upper",
+            "description": "上限",
+            "default": "+inf"
+          },
+          "expression": {
+            "$ref": "#/components/schemas/PolynomialV1",
+            "description": "制約を課す多項式"
+          }
+        },
+        "type": "object",
+        "required": [
+          "expression"
+        ],
+        "title": "constraint"
+      },
+      "DenseObjectiveV1": {
+        "properties": {
+          "matrix": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Matrix",
+            "description": "目的関数の密行列表現。 上三角行列として与えられ、形式は [[a_11, ..., a_1n], [a_22, ..., a_2n], ..., [a_nn]] である必要があります。",
+            "default": []
+          },
+          "constant": {
+            "type": "number",
+            "title": "Constant",
+            "description": "目的関数の定数項",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "DenseObjectiveV1"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PenaltyV1": {
+        "properties": {
+          "threshold": {
+            "type": "number",
+            "minimum": 0,
+            "title": "threshold",
+            "description": "ペナルティ関数のしきい値",
+            "default": 0
+          },
+          "weight": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "title": "weight",
+            "description": "ペナルティ関数の重み",
+            "default": 1
+          },
+          "expression": {
+            "$ref": "#/components/schemas/PolynomialV1",
+            "description": "ペナルティ関数の多項式表現"
+          }
+        },
+        "type": "object",
+        "required": [
+          "expression"
+        ],
+        "title": "penalty"
+      },
+      "PolynomialV1": {
+        "items": {
+          "prefixItems": [
+            {
+              "type": "number",
+              "description": "係数"
+            }
+          ],
+          "items": {
+            "type": "integer",
+            "maximum": 4294967295,
+            "minimum": 0,
+            "maxLength": 4,
+            "minLength": 1,
+            "description": "変数インデックスのリスト"
+          },
+          "type": "array",
+          "maxItems": 5,
+          "minItems": 1
+        },
+        "type": "array",
+        "title": "PolynomialV1"
+      },
+      "RequestV1Solve": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/RequestV1SolveSparseConstraint"
+          },
+          {
+            "$ref": "#/components/schemas/RequestV1SolveDenseConstraint"
+          },
+          {
+            "$ref": "#/components/schemas/RequestV1SolveSparsePenalty"
+          },
+          {
+            "$ref": "#/components/schemas/RequestV1SolveDensePenalty"
+          }
+        ],
+        "title": "RequestV1Solve",
+        "description": "Base model for RequestV1Solve to ensure correct discriminator usage."
+      },
+      "RequestV1SolveDenseConstraint": {
+        "properties": {
+          "time_limit_ms": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "title": "Time Limit Ms",
+            "description": "実行時間の上限 (msec)",
+            "default": 10000
+          },
+          "num_gpus": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Num Gpus",
+            "description": "計算に使用する GPU 数。0 を指定すると、利用可能なすべての GPU を使用する",
+            "default": 1
+          },
+          "duplicate_solutions": {
+            "type": "boolean",
+            "title": "Duplicate Solutions",
+            "description": "重複解をレスポンスに含めるかどうか",
+            "default": false
+          },
+          "dense_objective": {
+            "$ref": "#/components/schemas/DenseObjectiveV1",
+            "description": "目的関数の密行列表現"
+          },
+          "constraints": {
+            "items": {
+              "$ref": "#/components/schemas/ConstraintV1"
+            },
+            "type": "array",
+            "title": "Constraints",
+            "description": "制約条件のリスト"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dense_objective",
+          "constraints"
+        ],
+        "title": "Constraint mode (dense)"
+      },
+      "RequestV1SolveDensePenalty": {
+        "properties": {
+          "time_limit_ms": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "title": "Time Limit Ms",
+            "description": "実行時間の上限 (msec)",
+            "default": 10000
+          },
+          "num_gpus": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Num Gpus",
+            "description": "計算に使用する GPU 数。0 を指定すると、利用可能なすべての GPU を使用する",
+            "default": 1
+          },
+          "duplicate_solutions": {
+            "type": "boolean",
+            "title": "Duplicate Solutions",
+            "description": "重複解をレスポンスに含めるかどうか",
+            "default": false
+          },
+          "dense_objective": {
+            "$ref": "#/components/schemas/DenseObjectiveV1",
+            "description": "目的関数の密行列表現"
+          },
+          "penalties": {
+            "items": {
+              "$ref": "#/components/schemas/PenaltyV1"
+            },
+            "type": "array",
+            "title": "Penalties",
+            "description": "ペナルティ関数のリスト"
+          },
+          "penalty_weight_calibration": {
+            "type": "boolean",
+            "title": "Penalty Weight Calibration",
+            "description": "ペナルティ関数の重みを自動で調整するかどうか",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "dense_objective",
+          "penalties"
+        ],
+        "title": "PUBO mode (dense)"
+      },
+      "RequestV1SolveSparseConstraint": {
+        "properties": {
+          "time_limit_ms": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "title": "Time Limit Ms",
+            "description": "実行時間の上限 (msec)",
+            "default": 10000
+          },
+          "num_gpus": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Num Gpus",
+            "description": "計算に使用する GPU 数。0 を指定すると、利用可能なすべての GPU を使用する",
+            "default": 1
+          },
+          "duplicate_solutions": {
+            "type": "boolean",
+            "title": "Duplicate Solutions",
+            "description": "重複解をレスポンスに含めるかどうか",
+            "default": false
+          },
+          "sparse_objective": {
+            "$ref": "#/components/schemas/PolynomialV1",
+            "description": "目的関数の多項式表現"
+          },
+          "constraints": {
+            "items": {
+              "$ref": "#/components/schemas/ConstraintV1"
+            },
+            "type": "array",
+            "title": "Constraints",
+            "description": "制約条件のリスト"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sparse_objective",
+          "constraints"
+        ],
+        "title": "Constraint mode (sparse)"
+      },
+      "RequestV1SolveSparsePenalty": {
+        "properties": {
+          "time_limit_ms": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "title": "Time Limit Ms",
+            "description": "実行時間の上限 (msec)",
+            "default": 10000
+          },
+          "num_gpus": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Num Gpus",
+            "description": "計算に使用する GPU 数。0 を指定すると、利用可能なすべての GPU を使用する",
+            "default": 1
+          },
+          "duplicate_solutions": {
+            "type": "boolean",
+            "title": "Duplicate Solutions",
+            "description": "重複解をレスポンスに含めるかどうか",
+            "default": false
+          },
+          "sparse_objective": {
+            "$ref": "#/components/schemas/PolynomialV1",
+            "description": "目的関数の多項式表現"
+          },
+          "penalties": {
+            "items": {
+              "$ref": "#/components/schemas/PenaltyV1"
+            },
+            "type": "array",
+            "title": "Penalties",
+            "description": "ペナルティ関数のリスト"
+          },
+          "penalty_weight_calibration": {
+            "type": "boolean",
+            "title": "Penalty Weight Calibration",
+            "description": "ペナルティ関数の重みを自動で調整するかどうか",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "sparse_objective",
+          "penalties"
+        ],
+        "title": "PUBO mode (sparse)"
+      },
+      "ResponseHealth": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "サービスの状態"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "サービスのバージョン"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version"
+        ],
+        "title": "ResponseHealth"
+      },
+      "ResponseOnError": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error",
+            "description": "エラーメッセージ"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ResponseOnError"
+      },
+      "ResponseV1SyncSolve": {
+        "properties": {
+          "solutions": {
+            "items": {
+              "$ref": "#/components/schemas/Solution"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Solutions",
+            "description": "解のリスト"
+          },
+          "execution_time_ms": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Execution Time Ms",
+            "description": "実行時間 (msec)"
+          },
+          "queue_time_ms": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Queue Time Ms",
+            "description": "キュー時間 (msec)"
+          },
+          "submitted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Submitted At",
+            "description": "ジョブが提出された日時"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At",
+            "description": "ジョブが開始された日時"
+          },
+          "num_gpus": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Num Gpus",
+            "description": "使用した GPU の数"
+          },
+          "num_samplings": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Num Samplings",
+            "description": "サンプリング数"
+          },
+          "num_flips": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Num Flips",
+            "description": "フリップ数"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings",
+            "description": "警告のリスト"
+          },
+          "version": {
+            "type": "string",
+            "pattern": "(^\\d+\\.\\d+\\.\\d+(\\-.*)?(\\+.*)?$)",
+            "title": "Version",
+            "description": "実行したエンジンのバージョン情報"
+          }
+        },
+        "type": "object",
+        "required": [
+          "solutions",
+          "execution_time_ms",
+          "queue_time_ms",
+          "submitted_at",
+          "started_at",
+          "num_gpus",
+          "num_samplings",
+          "num_flips",
+          "warnings",
+          "version"
+        ],
+        "title": "ResponseV1SyncSolve"
+      },
+      "Solution": {
+        "properties": {
+          "time_stamp_ms": {
+            "type": "number",
+            "minimum": 0,
+            "title": "Time Stamp Ms",
+            "description": "解が得られた時刻 (msec)"
+          },
+          "objective": {
+            "type": "number",
+            "title": "Objective",
+            "description": "目的関数の値"
+          },
+          "values": {
+            "items": {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "変数の値"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Infeasible",
+              "Feasible",
+              "Optimal"
+            ],
+            "title": "Status",
+            "description": "解の状態"
+          }
+        },
+        "type": "object",
+        "required": [
+          "time_stamp_ms",
+          "objective",
+          "values",
+          "status"
+        ],
+        "title": "Solution"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
