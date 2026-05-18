@@ -14,5 +14,5 @@
   "num_samplings": 1000,
   "num_flips": 50000,
   "warnings": [],
-  "version": "1.2.0"
+  "version": "1.0.0"
 }

@@ -28,5 +28,5 @@
   "warnings": [
     "penalty_weight_calibration が無効化されているため、一部の制約が満たされない可能性があります"
   ],
-  "version": "1.2.0"
+  "version": "1.0.0"
 }

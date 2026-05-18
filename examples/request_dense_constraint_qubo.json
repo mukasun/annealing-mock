@@ -1,6 +1,5 @@
 {
   "time_limit_ms": 10000,
-  "duplicate_solutions": true,
   "dense_objective": {
     "matrix": [
       [1, -2, 0],

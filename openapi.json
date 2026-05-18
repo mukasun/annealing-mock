@@ -33,13 +33,6 @@
                       "status": "ok",
                       "version": "1.2.0"
                     }
-                  },
-                  "degraded": {
-                    "summary": "縮退運転中 (一部リソースが利用不可)",
-                    "value": {
-                      "status": "degraded",
-                      "version": "1.2.0"
-                    }
                   }
                 }
               }
@@ -68,7 +61,6 @@
                   "description": "4 アイテムの 0/1 ナップサック問題。価値最大化のため目的関数は負の係数。容量上限 8 を constraints で表現する。",
                   "value": {
                     "time_limit_ms": 5000,
-                    "duplicate_solutions": false,
                     "sparse_objective": [
                       [-3, 0],
                       [-4, 1],
@@ -93,7 +85,6 @@
                   "description": "上三角・ラギッド形式の密行列で表した QUBO。x_0+x_1+x_2 を [1, 2] に収める線形制約付き。",
                   "value": {
                     "time_limit_ms": 10000,
-                    "duplicate_solutions": true,
                     "dense_objective": {
                       "matrix": [
                         [1, -2, 0],
@@ -120,7 +111,6 @@
                   "description": "x_0*x_1*x_2 の 3 次項を含む sparse PUBO。x_0*x_1 にソフトなペナルティを課し、calibration を有効化。",
                   "value": {
                     "time_limit_ms": 15000,
-                    "duplicate_solutions": false,
                     "sparse_objective": [
                       [-2, 0],
                       [-1, 1],
@@ -144,7 +134,6 @@
                   "description": "a = [1, 2, 3] の数分割問題を密行列の QUBO + 対称性破れペナルティで表現。penalty_weight_calibration は無効化。",
                   "value": {
                     "time_limit_ms": 8000,
-                    "duplicate_solutions": false,
                     "dense_objective": {
                       "matrix": [
                         [-20, 16, 24],
@@ -201,7 +190,7 @@
                     }
                   },
                   "feasible_multi": {
-                    "summary": "複数解 (Optimal + Feasible) — duplicate_solutions=true / warnings あり",
+                    "summary": "複数解 (Optimal + Feasible) / warnings あり",
                     "value": {
                       "solutions": [
                         {
@@ -431,21 +420,23 @@
       },
       "PolynomialV1": {
         "items": {
-          "items": [
-            {
-              "type": "number",
-              "description": "係数"
-            }
-          ],
-          "additionalItems": {
-            "type": "integer",
-            "maximum": 4294967295,
-            "minimum": 0,
-            "description": "変数インデックスのリスト"
-          },
           "type": "array",
-          "maxItems": 5,
-          "minItems": 1
+          "items": {
+            "oneOf": [
+              {
+                "type": "number",
+                "description": "係数"
+              },
+              {
+                "type": "integer",
+                "maximum": 4294967295,
+                "minimum": 0,
+                "description": "変数インデックスのリスト"
+              }
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 5
         },
         "type": "array",
         "title": "PolynomialV1"
@@ -477,12 +468,6 @@
             "description": "実行時間の上限 (msec)",
             "default": 10000
           },
-          "duplicate_solutions": {
-            "type": "boolean",
-            "title": "Duplicate Solutions",
-            "description": "重複解をレスポンスに含めるかどうか",
-            "default": false
-          },
           "dense_objective": {
             "$ref": "#/components/schemas/DenseObjectiveV1",
             "description": "目的関数の密行列表現"
@@ -511,12 +496,6 @@
             "title": "Time Limit Ms",
             "description": "実行時間の上限 (msec)",
             "default": 10000
-          },
-          "duplicate_solutions": {
-            "type": "boolean",
-            "title": "Duplicate Solutions",
-            "description": "重複解をレスポンスに含めるかどうか",
-            "default": false
           },
           "dense_objective": {
             "$ref": "#/components/schemas/DenseObjectiveV1",
@@ -553,12 +532,6 @@
             "description": "実行時間の上限 (msec)",
             "default": 10000
           },
-          "duplicate_solutions": {
-            "type": "boolean",
-            "title": "Duplicate Solutions",
-            "description": "重複解をレスポンスに含めるかどうか",
-            "default": false
-          },
           "sparse_objective": {
             "$ref": "#/components/schemas/PolynomialV1",
             "description": "目的関数の多項式表現"
@@ -587,12 +560,6 @@
             "title": "Time Limit Ms",
             "description": "実行時間の上限 (msec)",
             "default": 10000
-          },
-          "duplicate_solutions": {
-            "type": "boolean",
-            "title": "Duplicate Solutions",
-            "description": "重複解をレスポンスに含めるかどうか",
-            "default": false
           },
           "sparse_objective": {
             "$ref": "#/components/schemas/PolynomialV1",

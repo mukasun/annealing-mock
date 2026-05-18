@@ -1,6 +1,5 @@
 {
   "time_limit_ms": 5000,
-  "duplicate_solutions": false,
   "sparse_objective": [
     [-3, 0],
     [-4, 1],

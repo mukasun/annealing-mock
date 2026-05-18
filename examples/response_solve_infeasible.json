@@ -16,5 +16,5 @@
   "warnings": [
     "制約を満たす解が time_limit_ms 内に見つかりませんでした"
   ],
-  "version": "1.2.0-rc.1"
+  "version": "1.1.0-rc.1"
 }
