@@ -23,11 +23,10 @@
   "queue_time_ms": 45.2,
   "submitted_at": "2026-05-16T10:01:00.000Z",
   "started_at": "2026-05-16T10:01:00.045Z",
-  "num_gpus": 2,
   "num_samplings": 2000,
   "num_flips": 100000,
   "warnings": [
     "penalty_weight_calibration が無効化されているため、一部の制約が満たされない可能性があります"
   ],
-  "version": "1.1.0"
+  "version": "1.2.0"
 }

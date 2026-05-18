@@ -41,7 +41,7 @@ pnpm install
 
 ```bash
 curl http://127.0.0.1:4010/v1/health
-# {"status":"ok","version":"1.1.0"}
+# {"status":"ok","version":"1.2.0"}
 ```
 
 ---
@@ -74,7 +74,6 @@ curl http://127.0.0.1:4010/v1/health
 - **`Solution.status`** … `Infeasible` / `Feasible` / `Optimal` のいずれか。
 - **`ResponseV1SyncSolve.version`** … SemVer (`^\d+\.\d+\.\d+(-.*)?(\+.*)?$`)。
 - **`ResponseV1SyncSolve.solutions`** … `minItems: 1` (成功時は空配列禁止)。
-- **`num_gpus: 0`** … リクエストでは「利用可能な全 GPU を使用」の特例値。レスポンスでは実際の使用数 (≥ 0)。
 
 ---
 
@@ -162,7 +161,6 @@ Prefer: code=200, dynamic=true
 ```json
 {
   "time_limit_ms": 5000,
-  "num_gpus": 1,
   "duplicate_solutions": false,
   "sparse_objective": [
     [-3, 0], [-4, 1], [-5, 2], [-6, 3]
@@ -186,11 +184,10 @@ Prefer: code=200, dynamic=true
   "queue_time_ms": 12.3,
   "submitted_at": "2026-05-16T10:00:00.000Z",
   "started_at":   "2026-05-16T10:00:00.012Z",
-  "num_gpus": 1,
   "num_samplings": 1000,
   "num_flips": 50000,
   "warnings": [],
-  "version": "1.1.0"
+  "version": "1.2.0"
 }
 ```
 
@@ -213,7 +210,6 @@ Prefer: code=200, dynamic=true
 
 ```json
 {
-  "num_gpus": 0,
   "sparse_objective": [
     [-2, 0], [-1, 1], [-3, 2],
     [5, 0, 1, 2]
@@ -224,7 +220,7 @@ Prefer: code=200, dynamic=true
   "penalty_weight_calibration": true
 }
 ```
-> `[5, 0, 1, 2]` = 係数 5 の 3 次項 `x_0 * x_1 * x_2`。`num_gpus: 0` は「全 GPU 利用」。
+> `[5, 0, 1, 2]` = 係数 5 の 3 次項 `x_0 * x_1 * x_2`。
 
 ### 4. Dense + Penalty (3 要素数分割)
 

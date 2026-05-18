@@ -1,6 +1,5 @@
 {
   "time_limit_ms": 15000,
-  "num_gpus": 0,
   "duplicate_solutions": false,
   "sparse_objective": [
     [-2, 0],

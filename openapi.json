@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Annealing Engine API",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "servers": [
     {
@@ -31,14 +31,14 @@
                     "summary": "正常稼働中",
                     "value": {
                       "status": "ok",
-                      "version": "1.1.0"
+                      "version": "1.2.0"
                     }
                   },
                   "degraded": {
-                    "summary": "縮退運転中 (一部 GPU が利用不可)",
+                    "summary": "縮退運転中 (一部リソースが利用不可)",
                     "value": {
                       "status": "degraded",
-                      "version": "1.1.0"
+                      "version": "1.2.0"
                     }
                   }
                 }
@@ -68,7 +68,6 @@
                   "description": "4 アイテムの 0/1 ナップサック問題。価値最大化のため目的関数は負の係数。容量上限 8 を constraints で表現する。",
                   "value": {
                     "time_limit_ms": 5000,
-                    "num_gpus": 1,
                     "duplicate_solutions": false,
                     "sparse_objective": [
                       [-3, 0],
@@ -94,7 +93,6 @@
                   "description": "上三角・ラギッド形式の密行列で表した QUBO。x_0+x_1+x_2 を [1, 2] に収める線形制約付き。",
                   "value": {
                     "time_limit_ms": 10000,
-                    "num_gpus": 2,
                     "duplicate_solutions": true,
                     "dense_objective": {
                       "matrix": [
@@ -119,10 +117,9 @@
                 },
                 "pubo_sparse_penalty": {
                   "summary": "Sparse 目的関数 + ペナルティ (3 次項を含む PUBO)",
-                  "description": "x_0*x_1*x_2 の 3 次項を含む sparse PUBO。x_0*x_1 にソフトなペナルティを課し、calibration を有効化。num_gpus=0 は『利用可能な全 GPU を使用』の特例値。",
+                  "description": "x_0*x_1*x_2 の 3 次項を含む sparse PUBO。x_0*x_1 にソフトなペナルティを課し、calibration を有効化。",
                   "value": {
                     "time_limit_ms": 15000,
-                    "num_gpus": 0,
                     "duplicate_solutions": false,
                     "sparse_objective": [
                       [-2, 0],
@@ -147,7 +144,6 @@
                   "description": "a = [1, 2, 3] の数分割問題を密行列の QUBO + 対称性破れペナルティで表現。penalty_weight_calibration は無効化。",
                   "value": {
                     "time_limit_ms": 8000,
-                    "num_gpus": 1,
                     "duplicate_solutions": false,
                     "dense_objective": {
                       "matrix": [
@@ -198,11 +194,10 @@
                       "queue_time_ms": 12.3,
                       "submitted_at": "2026-05-16T10:00:00.000Z",
                       "started_at": "2026-05-16T10:00:00.012Z",
-                      "num_gpus": 1,
                       "num_samplings": 1000,
                       "num_flips": 50000,
                       "warnings": [],
-                      "version": "1.1.0"
+                      "version": "1.2.0"
                     }
                   },
                   "feasible_multi": {
@@ -232,13 +227,12 @@
                       "queue_time_ms": 45.2,
                       "submitted_at": "2026-05-16T10:01:00.000Z",
                       "started_at": "2026-05-16T10:01:00.045Z",
-                      "num_gpus": 2,
                       "num_samplings": 2000,
                       "num_flips": 100000,
                       "warnings": [
                         "penalty_weight_calibration が無効化されているため、一部の制約が満たされない可能性があります"
                       ],
-                      "version": "1.1.0"
+                      "version": "1.2.0"
                     }
                   },
                   "infeasible": {
@@ -256,13 +250,12 @@
                       "queue_time_ms": 100.0,
                       "submitted_at": "2026-05-16T10:02:00.000Z",
                       "started_at": "2026-05-16T10:02:00.100Z",
-                      "num_gpus": 1,
                       "num_samplings": 500,
                       "num_flips": 25000,
                       "warnings": [
                         "制約を満たす解が time_limit_ms 内に見つかりませんでした"
                       ],
-                      "version": "1.1.0-rc.1"
+                      "version": "1.2.0-rc.1"
                     }
                   }
                 }
@@ -484,13 +477,6 @@
             "description": "実行時間の上限 (msec)",
             "default": 10000
           },
-          "num_gpus": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Num Gpus",
-            "description": "計算に使用する GPU 数。0 を指定すると、利用可能なすべての GPU を使用する",
-            "default": 1
-          },
           "duplicate_solutions": {
             "type": "boolean",
             "title": "Duplicate Solutions",
@@ -525,13 +511,6 @@
             "title": "Time Limit Ms",
             "description": "実行時間の上限 (msec)",
             "default": 10000
-          },
-          "num_gpus": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Num Gpus",
-            "description": "計算に使用する GPU 数。0 を指定すると、利用可能なすべての GPU を使用する",
-            "default": 1
           },
           "duplicate_solutions": {
             "type": "boolean",
@@ -574,13 +553,6 @@
             "description": "実行時間の上限 (msec)",
             "default": 10000
           },
-          "num_gpus": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Num Gpus",
-            "description": "計算に使用する GPU 数。0 を指定すると、利用可能なすべての GPU を使用する",
-            "default": 1
-          },
           "duplicate_solutions": {
             "type": "boolean",
             "title": "Duplicate Solutions",
@@ -615,13 +587,6 @@
             "title": "Time Limit Ms",
             "description": "実行時間の上限 (msec)",
             "default": 10000
-          },
-          "num_gpus": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Num Gpus",
-            "description": "計算に使用する GPU 数。0 を指定すると、利用可能なすべての GPU を使用する",
-            "default": 1
           },
           "duplicate_solutions": {
             "type": "boolean",
@@ -724,12 +689,6 @@
             "title": "Started At",
             "description": "ジョブが開始された日時"
           },
-          "num_gpus": {
-            "type": "integer",
-            "minimum": 0,
-            "title": "Num Gpus",
-            "description": "使用した GPU の数"
-          },
           "num_samplings": {
             "type": "integer",
             "minimum": 1,
@@ -764,7 +723,6 @@
           "queue_time_ms",
           "submitted_at",
           "started_at",
-          "num_gpus",
           "num_samplings",
           "num_flips",
           "warnings",

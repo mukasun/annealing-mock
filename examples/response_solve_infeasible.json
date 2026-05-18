@@ -11,11 +11,10 @@
   "queue_time_ms": 100.0,
   "submitted_at": "2026-05-16T10:02:00.000Z",
   "started_at": "2026-05-16T10:02:00.100Z",
-  "num_gpus": 1,
   "num_samplings": 500,
   "num_flips": 25000,
   "warnings": [
     "制約を満たす解が time_limit_ms 内に見つかりませんでした"
   ],
-  "version": "1.1.0-rc.1"
+  "version": "1.2.0-rc.1"
 }

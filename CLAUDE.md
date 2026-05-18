@@ -67,7 +67,6 @@ Key schema details that are easy to miss:
 - `Solution.values` is an array of strict `0|1` integers (binary, not boolean). `Solution.status` is one of `Infeasible | Feasible | Optimal`.
 - `ResponseV1SyncSolve.version` must match the regex `^\d+\.\d+\.\d+(-.*)?(\+.*)?$` (SemVer with optional pre-release/build metadata).
 - `ResponseV1SyncSolve.solutions` has `minItems: 1` — must never be empty on success.
-- `num_gpus: 0` in requests is special-cased ("use all available GPUs"). The response still reports the actual count (≥ 0).
 
 ### Prism-specific quirks to anticipate
 
@@ -77,6 +76,6 @@ Key schema details that are easy to miss:
 
 ## Working in this repo
 
-- `openapi.json` is the source of truth. When changing API behavior, update the spec and bump `info.version` (currently `1.1.0`) — do not let documentation and runtime diverge.
+- `openapi.json` is the source of truth. When changing API behavior, update the spec and bump `info.version` (currently `1.2.0`) — do not let documentation and runtime diverge.
 - Field `description`s in `openapi.json` are intentionally Japanese. Preserve Japanese descriptions when editing or regenerating the spec.
 - Keep the repo minimal: a thin `package.json` pinning `@stoplight/prism-cli` is the maximum scaffolding needed for the mock use case. Do not add a backend framework, ORM, or test harness unless the requirements grow beyond "serve the spec".

@@ -1,6 +1,5 @@
 {
   "time_limit_ms": 10000,
-  "num_gpus": 2,
   "duplicate_solutions": true,
   "dense_objective": {
     "matrix": [
