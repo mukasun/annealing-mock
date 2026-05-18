@@ -1,6 +1,6 @@
-# annealing-mock
+# annealing-mock-api
 
-`openapi.json` (Annealing Engine API v1, OpenAPI 3.1) を **[Prism](https://github.com/stoplightio/prism)** で配信するローカルモックサーバーです。クライアント開発・契約テスト用途。実ソルバーは含みません。
+`openapi.json` (Annealing Engine API v1, OpenAPI 3.1) を **[Prism](https://github.com/stoplightio/prism)** で配信するローカルモックサーバーです。クライアント開発・テスト用途。実ソルバーは含みません。
 
 - ハンドラ実装なし: spec をそのまま起動するだけ
 - 4 形状の `oneOf` リクエスト (sparse/dense × constraint/penalty) を spec 駆動で検証
@@ -241,26 +241,7 @@ Prefer: code=200, dynamic=true
 
 ## Prism 利用上の注意
 
-CLAUDE.md にもまとめてありますが、共有時の Q&A 頻出ポイント:
-
 - **`oneOf` の選択順**: Prism は最初に required を満たす sub-schema にマッチさせます。リクエストに `sparse_objective` と `dense_objective` を両方混在させると順序依存になるので、必ずどちらか一方だけ送ること。
 - **リクエスト検証エラーは 422 か 4xx**: spec が `400` を宣言しているため、Prism は spec 上の `400` を選びます。`--errors` を付けると違反時に spec の 4xx/5xx を能動的に選択。
 - **動的モードのレスポンス**: schema 上は valid ですが、`solutions[].values` の長さと多項式の変数数の整合などはランダム。整合性が必要なテストは `Prefer: example=...` で静的例に切替を推奨。
 - **`PolynomialV1` の表記**: 本リポジトリでは Prism の AJV が `prefixItems` を十分に解釈できない事象を回避するため、`items: [...]` + `additionalItems` の Draft-7 互換タプル構文に書き換えています。意味 (先頭=係数 number、以降=変数インデックス integer ≥ 0、長さ 1〜5) は spec オリジナルと同じ。
-
----
-
-## リポジトリ構成
-
-```
-.
-├── README.md            このファイル
-├── CLAUDE.md            Claude Code 用ガイド (背景・選定理由・運用ノート)
-├── openapi.json         API 契約 (source of truth)。examples を埋め込み済み
-├── package.json         Prism CLI を pin、packageManager を pnpm に固定
-├── pnpm-lock.yaml
-├── .gitignore
-└── examples/            リクエスト 4 + レスポンス 7 の JSON サンプル
-```
-
-`openapi.json` を変更する際は CLAUDE.md の方針に従い、API 挙動の変更時には `info.version` を bump してください。
